@@ -1,5 +1,6 @@
 use std::fs;
 use std::fs::File;
+use std::io;
 use std::io::prelude::*;
 
 pub fn init() -> std::io::Result<()> {
@@ -13,6 +14,16 @@ pub fn read_store() {
         .expect("Something went wrong reading the file");
 
     println!("With text:\n{}", contents);
+}
+
+pub fn read_and_print() {
+    let mut input = String::new();
+
+    io::stdin().read_line(&mut input)
+        .ok()
+        .expect("failed to read line");
+
+    println!(">> {}", input);
 }
 
 

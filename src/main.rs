@@ -8,4 +8,8 @@ fn main() {
         process::exit(1);
     }
     lib::read_store();
+
+    loop {
+        lib::read_and_print();
+    }
 }

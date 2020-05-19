@@ -9,11 +9,11 @@ pub fn init() -> std::io::Result<()> {
     Ok(())
 }
 
-pub fn read_store() {
+fn read_store() -> String {
     let contents = fs::read_to_string("redstore")
         .expect("Something went wrong reading the file");
 
-    println!("With text:\n{}", contents);
+    return contents;
 }
 
 pub fn read_and_print() {
@@ -23,9 +23,27 @@ pub fn read_and_print() {
         .ok()
         .expect("failed to read line");
 
-    println!(">> {}", input);
+    let command_with_args: Vec<&str> = input.split(" ").collect();
+
+    let key = command_with_args[1].trim();
+
+    let value = find_in_store(key);
+
+    println!(">> {}", value);
 }
 
+fn find_in_store(key: &str) -> String {
+    let contents = read_store();
+
+    for row in contents.split("\n") {
+        let vec: Vec<&str> = row.split(" ").collect();
+
+        if vec[0] == key {
+            return vec[1].to_string();
+        }
+    }
+    return "(nil)".to_string();
+}
 
 #[cfg(test)]
 mod tests {

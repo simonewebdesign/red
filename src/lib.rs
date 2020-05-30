@@ -23,7 +23,18 @@ pub fn read_eval_print() {
         .ok()
         .expect("failed to read line");
 
+    // println!("{}", input);
+
     let command_with_args: Vec<&str> = input.split(" ").collect();
+
+    match command_with_args.as_slice() {
+        ["GET", key] => {
+            println!("User wants to get value for key {}", key);
+        }
+        _ => {
+            println!("Something else entirely");
+        }
+    }
 
     let key = command_with_args[1].trim();
 

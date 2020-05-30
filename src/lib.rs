@@ -16,7 +16,7 @@ fn read_store() -> String {
     return contents;
 }
 
-pub fn read_and_print() {
+pub fn read_eval_print() {
     let mut input = String::new();
 
     io::stdin().read_line(&mut input)

@@ -7,9 +7,8 @@ fn main() {
         println!("red: error: failed to initialize store");
         process::exit(1);
     }
-    lib::read_store();
 
     loop {
-        lib::read_and_print();
+        lib::read_eval_print();
     }
 }

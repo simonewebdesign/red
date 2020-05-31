@@ -27,24 +27,23 @@ pub fn read_eval_print() {
         .ok()
         .expect("failed to read line");
 
-    // println!("{}", input);
-
     let command_with_args: Vec<&str> = input.split(" ").collect();
 
     match command_with_args.as_slice() {
-        ["GET", key] => {
+        ["get", key] => {
             println!("User wants to get value for key {}", key);
+            let value = find_in_store(key);
+            println!("{}", value);
         }
+
+        ["set", key, val] => {
+            println!("User wants to set value {} for key {}", val, key);
+        }
+
         _ => {
-            println!("Something else entirely");
+            println!("Unknown command");
         }
     }
-
-    let key = command_with_args[1].trim();
-
-    let value = find_in_store(key);
-
-    println!(">> {}", value);
 }
 
 fn find_in_store(key: &str) -> String {

@@ -17,6 +17,10 @@ fn read_store() -> String {
 }
 
 pub fn read_eval_print() {
+    print!("> ");
+    io::Write::flush(&mut io::stdout())
+        .expect("flush failed");
+
     let mut input = String::new();
 
     io::stdin().read_line(&mut input)

@@ -1,4 +1,3 @@
-// use std::process;
 use std::io;
 use std::collections::HashMap;
 
@@ -11,10 +10,6 @@ fn main() {
     // }
 
     let mut store: HashMap<String, String> = HashMap::new();
-    store.insert(
-        "foo".to_string(),
-        "bar".to_string(),
-    );
 
     loop {
         read_eval_print(&mut store);
@@ -44,28 +39,15 @@ pub fn read_eval_print(store: &mut HashMap<String, String>) {
 
         ["set", key, val] => {
             &store.insert(key.to_string(), val.trim().to_string());
-            println!("# BEGIN STORE, right after an insertion #");
-            for (key, value) in store {
-                println!("{}: {}", key, value);
-            }
-            // println!("normal: {:?} pretty: {:#?}", store, store);
-            println!("# END STORE, right after an insertion #");
             println!("OK");
         }
 
-        ["debug", ..] => {
-            println!("# BEGIN STORE #");
-            for (key, value) in store {
-                println!("{}: {}", key, value);
-            }
-            // println!("normal: {:?} pretty: {:#?}", store, store);
-            println!("# END STORE #");
+        ["debug\n"] | ["debug", ..] => {
+            println!("store = {:#?}", store);
         }
 
         _ => {
             println!("ERR unknown command");
         }
     }
-
-    println!("Debug: command was: {:?}", command_with_args.as_slice())
 }

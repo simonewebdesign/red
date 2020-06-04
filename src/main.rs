@@ -1,14 +1,7 @@
 use std::io;
 use std::collections::HashMap;
 
-mod lib;
-
 fn main() {
-    // if let Err(_) = lib::init() {
-    //     println!("red: error: failed to initialize store");
-    //     process::exit(1);
-    // }
-
     let mut store: HashMap<String, String> = HashMap::new();
 
     loop {

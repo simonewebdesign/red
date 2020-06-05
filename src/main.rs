@@ -30,7 +30,7 @@ fn main() {
     }
 }
 
-pub fn read_eval_print(store: &mut HashMap<String, Value>) {
+pub fn read_eval_print(store: &mut HashMap<String, Box<dyn fmt::Debug + 'static>>) {
     print!("> ");
     io::Write::flush(&mut io::stdout())
         .expect("flush failed");
@@ -54,12 +54,12 @@ pub fn read_eval_print(store: &mut HashMap<String, Value>) {
         ["sadd", key, member] => {
             let mut set: HashSet<String> = HashSet::new();
             set.insert(member.trim().to_string());
-            &store.insert(key.to_string(), Value::HSet(set));
+            &store.insert(key.to_string(), Box::new(set));
             println!("OK");
         }
 
         ["set", key, val] => {
-            &store.insert(key.to_string(), Value::Str(val.trim().to_string()));
+            &store.insert(key.to_string(), Box::new(val.trim().to_string()));
             println!("OK");
         }
 

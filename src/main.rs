@@ -1,26 +1,6 @@
 use std::io;
 use std::collections::{HashMap, HashSet};
-
-// My choices: from https://stackoverflow.com/questions/59973669/is-it-possible-to-have-a-hashmap-that-can-accept-values-of-multiple-types-or-of
-// 1. Model your value type as a enum and insert that into hashmap. – edwardw Jan 29 at 18:49
-// 2. Or find a common trait and use trait objects. – Shepmaster Jan 29 at 19:01
-// I tried 1.:
-#[derive(Debug)]
-pub enum Value {
-    Str(String),
-    HSet(HashSet<String>),
-}
-// It seems cumbersome.
-// Also it doesnt work right away. I get these errors:
-// `Value` doesn't implement `std::fmt::Debug`
-// `Value` cannot be formatted using `{:?}`
-// help: the trait `std::fmt::Debug` is not implemented for `Value`
-// note: add `#[derive(Debug)]` or manually implement `std::fmt::Debug`
-// note: required because of the requirements on the impl of `std::fmt::Debug` for `&Value`
-// note: required by `std::fmt::Debug::fmt`rustc(E0277)
-
-// Seems like you were on the right track initially. You simply want to say that an abstract type
-// will resolve to either A or B concrete type.
+use std::fmt;
 
 fn main() {
     let mut store = HashMap::new();

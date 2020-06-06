@@ -10,20 +10,30 @@ Red has a similar interface to Redis. It has two executables:
 ## Commands
 
 * [`GET`](#get-key)
-* [`SADD`](#sadd-key-member-member-)
+* [`SADD`](#sadd-member)
 * [`SET`](#set-key-value)
+* [`SMEMBERS`](#smembers)
+* [`SREM`](#srem-member)
 
 ### GET key
 
 Get the value of key. If the key does not exist the special value `nil` is returned.
 
-### SADD key member [member ...]
+### SADD member
 
-Add the specified members to the set stored at key. Specified members that are already a member of this set are ignored. If key does not exist, a new set is created before adding the specified members.
+Add the member to the set. If the member is already in the set, it will be ignored.
 
 ### SET key value
 
 Set key to hold the string `value`. If key already holds a value, it is overwritten.
+
+### SMEMBERS
+
+Returns all the members of the set.
+
+### SREM member
+
+Remove the specified member from the set. If the member is not in the set, it will be ignored.
 
 
 ## Installation

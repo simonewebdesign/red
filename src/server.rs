@@ -1,6 +1,5 @@
 use std::io::{self, Read, Write};
 use std::net::{TcpListener, TcpStream};
-use std::str;
 mod lib;
 use lib::State;
 
@@ -39,7 +38,7 @@ fn handle_conn(mut stream: TcpStream, state: &mut State) {
     };
 }
 
-fn handle_bytes(mut buffer: &[u8], mut stream: TcpStream, state: &mut State) {
+fn handle_bytes(buffer: &[u8], mut stream: TcpStream, state: &mut State) {
     println!("result: {:?}", buffer);
     match buffer {
         // GET key

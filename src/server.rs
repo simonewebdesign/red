@@ -28,7 +28,7 @@ fn handle_conn(mut stream: TcpStream, state: &mut State) {
     loop {
         match stream.read_to_end(&mut buf) {
             Ok(_) => {
-                handle_bytes(&buf, state);
+                handle_bytes(&buf, stream, state);
                 break;
             },
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
@@ -39,7 +39,7 @@ fn handle_conn(mut stream: TcpStream, state: &mut State) {
     };
 }
 
-fn handle_bytes(mut buffer: &[u8], state: &mut State) {
+fn handle_bytes(mut buffer: &[u8], mut stream: TcpStream, state: &mut State) {
     println!("result: {:?}", buffer);
     match buffer {
         // GET key
@@ -72,6 +72,8 @@ fn handle_bytes(mut buffer: &[u8], state: &mut State) {
         [115, 101, 116, ..]  => {
             state.set("somekey".to_string(), "someValue".to_string());
             println!("it's a set operation. A sample key has been added to the state.");
+
+            let _ = stream.write(&[79, 75]);
         }
 
         // DEBUG

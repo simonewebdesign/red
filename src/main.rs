@@ -1,20 +1,16 @@
 use std::io;
-use std::collections::{HashMap, HashSet};
-use std::fmt;
+mod lib;
+use lib::State;
 
 fn main() {
-    let mut store = HashMap::new();
-    let mut set = HashSet::new();
+    let mut state = State::new();
 
     loop {
-        read_eval_print(&mut store, &mut set);
+        read_eval_print(&mut state);
     }
 }
 
-pub fn read_eval_print(
-    store: &mut HashMap<String, String>,
-    set: &mut HashSet<String>,
-) {
+pub fn read_eval_print(state: &mut State) {
     print!("> ");
     io::Write::flush(&mut io::stdout())
         .expect("flush failed");
@@ -29,35 +25,31 @@ pub fn read_eval_print(
 
     match command_with_args.as_slice() {
         ["get", key] => {
-            match store.get(key.trim()) {
-                Some(value) => println!("{:?}", value),
-                None => println!("(nil)")
-            }
+            println!("{}", state.get(key.trim()));
         }
 
         ["sadd", member] => {
-            set.insert(member.trim().to_string());
+            state.sadd(member.trim().to_string());
             println!("OK");
         }
 
         ["smembers\n"] => {
-            for member in set.iter() {
+            for member in state.smembers() {
                 println!("{}", member);
             }
         }
 
         ["srem", member] => {
-            set.remove(member.trim());
+            state.srem(member.trim());
         }
 
         ["set", key, val] => {
-            &store.insert(key.to_string(), val.trim().to_string());
+            state.set(key.to_string(), val.trim().to_string());
             println!("OK");
         }
 
         ["debug\n"] => {
-            println!("store = {:#?}", store);
-            println!("set = {:#?}", set);
+            println!("{:#?}", state);
         }
 
         _ => {

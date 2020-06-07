@@ -1,24 +1,39 @@
-// use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
-// pub struct Store<'a> {
-//     _data: &'a mut HashMap<&'a str, String>,
-// }
+#[derive(Debug)]
+pub struct State {
+    store: HashMap<String, String>,
+    set: HashSet<String>,
+}
 
-// impl Store<'_> {
-//     pub fn new() -> Store<'static> {
-//         Store {
-//             _data: HashMap::new(),
-//         }
-//     }
+impl State {
+    pub fn new() -> Self {
+        State {
+            store: HashMap::new(),
+            set: HashSet::new(),
+        }
+    }
 
-//     pub fn get(&self, key: &str) -> String {
-//         return match self._data.get(&key) {
-//             Some(&value) => value.to_string(),
-//             _ => "(nil)".to_string(),
-//         }
-//     }
+    pub fn get(&mut self, key: &str) -> String {
+        match self.store.get(key) {
+            Some(value) => value.to_string(),
+            None => "(nil)".to_string()
+        }
+    }
 
-//     pub fn set(&mut self, key: &'static str, val: &str) {
-//         self._data.insert(key, val.to_string());
-//     }
-// }
+    pub fn sadd(&mut self, member: String) -> bool {
+        self.set.insert(member)
+    }
+
+    pub fn smembers(&mut self) -> impl Iterator<Item = &String> {
+        return self.set.iter();
+    }
+
+    pub fn srem(&mut self, member: &str) -> bool {
+        self.set.remove(member)
+    }
+
+    pub fn set(&mut self, key: String, value: String) {
+        self.store.insert(key, value);
+    }
+}

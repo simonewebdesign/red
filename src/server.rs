@@ -44,22 +44,28 @@ fn handle_bytes(mut buffer: &[u8], state: &mut State) {
     match buffer {
         // GET key
         [103, 101, 116, ..] => {
-
+            match state.get("foo") {
+                Some(value) => println!("{}", value),
+                None => println!("(nil)")
+            }
         }
 
         // SADD member
         [115, 97, 100, 100, ..] => {
-
+            state.sadd("BOH".to_string());
+            println!("OK");
         }
 
         // SMEMBERS
         [115, 109, 101, 109, 98, 101, 114, 115, ..] => {
-
+            for member in state.smembers() {
+                println!("{}", member);
+            }
         }
 
         // SREM member
         [115, 114, 101, 109, ..] => {
-
+            state.srem("BOH");
         }
 
         // SET key value

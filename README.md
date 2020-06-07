@@ -7,6 +7,10 @@ Red has a similar interface to Redis. It has two executables:
 - `red` - an interactive shell (like `redis-cli`)
 - `red-server` - a TCP server (like `redis-server`)
 
+The shell is a REPL: it expects you to enter one command at a time.
+
+The server, on the other hand, can handle multiple connections and multiple commands per connection. Commands must be separated by a newline and will be processed in a single step, as soon as EOF is reached. Replies are queued and will also be sent together.
+
 ## Commands
 
 * [`GET`](#get-key)

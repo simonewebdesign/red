@@ -25,7 +25,10 @@ pub fn read_eval_print(state: &mut State) {
 
     match command_with_args.as_slice() {
         ["get", key] => {
-            println!("{}", state.get(key.trim()));
+            match state.get(key.trim()) {
+                Some(value) => println!("{}", value),
+                None => println!("(nil)")
+            }
         }
 
         ["sadd", member] => {

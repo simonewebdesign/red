@@ -14,11 +14,8 @@ impl State {
         }
     }
 
-    pub fn get(&mut self, key: &str) -> String {
-        match self.store.get(key) {
-            Some(value) => value.to_string(),
-            None => "(nil)".to_string()
-        }
+    pub fn get(&mut self, key: &str) -> Option<&String> {
+        return self.store.get(key)
     }
 
     pub fn sadd(&mut self, member: String) -> bool {

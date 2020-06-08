@@ -27,7 +27,13 @@ fn handle_conn(mut stream: TcpStream, state: &mut State) {
     loop {
         match stream.read_to_end(&mut buf) {
             Ok(_) => {
-                handle_bytes(&buf, stream, state);
+                println!("ENTIRE BUFFER = {:#?}", &buf);
+                let iter = buf.split(|c| *c == 10);
+
+                for bytes in iter {
+                    handle_buf_slice(bytes, &stream, state);
+                }
+
                 break;
             },
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
@@ -38,21 +44,22 @@ fn handle_conn(mut stream: TcpStream, state: &mut State) {
     };
 }
 
-fn handle_bytes(buffer: &[u8], mut stream: TcpStream, state: &mut State) {
-    println!("result: {:?}", buffer);
-    match buffer {
+fn handle_buf_slice(bytes: &[u8], mut stream: &TcpStream, state: &mut State) {
+    match bytes {
         // GET key
         [103, 101, 116, ..] => {
             match state.get("foo") {
-                Some(value) => println!("{}", value),
-                None => println!("(nil)")
+                Some(value) => {},// stream.write value
+                None => {
+                    let _ = stream.write(&[40, 110, 105, 108, 41, 10]); // (nil)
+                }
             }
         }
 
         // SADD member
         [115, 97, 100, 100, ..] => {
             state.sadd("BOH".to_string());
-            println!("OK");
+            let _ = stream.write(&[79, 75, 10]); // OK
         }
 
         // SMEMBERS
@@ -69,10 +76,7 @@ fn handle_bytes(buffer: &[u8], mut stream: TcpStream, state: &mut State) {
 
         // SET key value
         [115, 101, 116, ..]  => {
-            state.set("somekey".to_string(), "someValue".to_string());
-            println!("it's a set operation. A sample key has been added to the state.");
-
-            let _ = stream.write(&[79, 75]);
+            let _ = stream.write(&[79, 75, 10]); // OK
         }
 
         // DEBUG

@@ -54,3 +54,7 @@ Clone the repo, then compile the project with:
 Alternatively, you can start an interactive shell with:
 
     cargo run
+
+Generate docs with:
+
+    cargo doc

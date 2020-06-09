@@ -32,7 +32,7 @@ echo 'set 2 b'   >&3     # outputs OK
 
 echo 'get 1'     >&3     # outputs a
 echo 'get 2'     >&3     # outputs b
-echo 'get 3'     >&3     # outputs (nil)
+echo 'get 3'     >&3     # outputs nil
 
 echo 'sadd x'    >&3
 echo 'sadd x'    >&3
@@ -43,8 +43,10 @@ echo 'srem z'    >&3
 
 echo 'smembers'  >&3     # outputs x\ny
 
-echo 'debug'     >&3     # outputs entire state: 1a, 2b, x, y
+# echo 'debug'     >&3     # outputs entire state: 1a, 2b, x, y
 
+# Assert the output is as expected:
+if [[ "$tmpf" =~ "OK\nOK\na\nb\nnil\nx\ny" ]]; then ok; else fail; fi
 
 # After you pass whatever data you need, terminate the nc
 # and close the descriptor in the original shell session:

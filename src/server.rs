@@ -1,5 +1,6 @@
 use std::io::{self, Read, Write};
 use std::net::{TcpListener, TcpStream};
+use std::str;
 mod lib;
 use lib::State;
 
@@ -48,10 +49,15 @@ fn handle_buf_slice(bytes: &[u8], mut stream: &TcpStream, state: &mut State) {
     match bytes {
         // GET key
         [103, 101, 116, ..] => {
-            match state.get("foo") {
-                Some(value) => {},// stream.write value
+            let (_, key) = bytes.split_at(4);
+
+            match state.get(str::from_utf8(&key).unwrap()) {
+                Some(value) => {
+                    let _ = stream.write(value.as_bytes());
+                    let _ = stream.write(&[10]);
+                },
                 None => {
-                    let _ = stream.write(&[40, 110, 105, 108, 41, 10]); // (nil)
+                    let _ = stream.write(&[110, 105, 108, 10]); // nil
                 }
             }
         }
@@ -59,7 +65,6 @@ fn handle_buf_slice(bytes: &[u8], mut stream: &TcpStream, state: &mut State) {
         // SADD member
         [115, 97, 100, 100, ..] => {
             state.sadd("BOH".to_string());
-            let _ = stream.write(&[79, 75, 10]); // OK
         }
 
         // SMEMBERS
@@ -76,6 +81,14 @@ fn handle_buf_slice(bytes: &[u8], mut stream: &TcpStream, state: &mut State) {
 
         // SET key value
         [115, 101, 116, ..]  => {
+            let (_, rhs) = bytes.split_at(4);
+            let mut iter = rhs.split(|c| *c == 32); // space
+            let key = iter.next().unwrap();
+            let val = iter.next().unwrap();
+            state.set(
+                String::from_utf8(key.to_vec()).unwrap(),
+                String::from_utf8(val.to_vec()).unwrap()
+            );
             let _ = stream.write(&[79, 75, 10]); // OK
         }
 

@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+function ok {
+  echo -e 'PASS \033[32m✓\033[0m'
+}
+
+function fail {
+  echo -e 'FAIL \033[31m✗\033[0m'
+  exit_status=1
+}
+
 # https://superuser.com/questions/1307732/how-to-send-binary-data-in-netcat-to-an-already-established-connection
 # Create a temporary fifo.
 # The right way to create a temporary file is with mktemp.
@@ -23,10 +32,10 @@ ncpid=$!  # PID may be useful later
 exec 3> "$tmpf"
 
 # Now you can send whatever you like through the fifo and the background connection persists:
-# echo 'set'     >&3  # sends text
-# echo -e '\x80' >&3  # sends "binary"
-# cat /etc/issue >&3  # sends file
-# cat            >&3  # type whatever you want, terminate with Ctrl+D
+# echo 'set'     >&3     # sends text
+# echo -e '\x80' >&3     # sends "binary"
+# cat /etc/issue >&3     # sends file
+# cat            >&3     # type whatever you want, terminate with Ctrl+D
 echo 'set 1 a'   >&3     # outputs OK
 echo 'set 2 b'   >&3     # outputs OK
 
@@ -41,12 +50,12 @@ echo 'sadd z'    >&3
 
 echo 'srem z'    >&3
 
-echo 'smembers'  >&3     # outputs x\ny
+# echo 'smembers'  >&3     # outputs x\ny\n, but can't be tested because the order is arbitrary
 
-# echo 'debug'     >&3     # outputs entire state: 1a, 2b, x, y
+echo 'debug'     >&3     # outputs entire state: 1a, 2b, x, y
 
 # Assert the output is as expected:
-if [[ "$tmpf" =~ "OK\nOK\na\nb\nnil\nx\ny" ]]; then ok; else fail; fi
+if [[ "$tmpf" =~ "OK\nOK\na\nb\nnil\n" ]]; then ok; else fail; fi
 
 # After you pass whatever data you need, terminate the nc
 # and close the descriptor in the original shell session:
@@ -55,3 +64,5 @@ if [[ "$tmpf" =~ "OK\nOK\na\nb\nnil\nx\ny" ]]; then ok; else fail; fi
 
 # Remove the temporary directory and its content (i.e. the fifo):
 # rm -r "$tmpd"
+
+exit $exit_status

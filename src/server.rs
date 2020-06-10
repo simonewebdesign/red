@@ -61,24 +61,25 @@ fn handle_buf_slice(bytes: &[u8], mut stream: &TcpStream, state: &mut State) {
                 }
             }
         }
-
         // SADD member
         [115, 97, 100, 100, ..] => {
-            state.sadd("BOH".to_string());
+            let (_, rhs) = bytes.split_at(5);
+            state.sadd(
+                String::from_utf8(rhs.to_vec()).unwrap(),
+            );
         }
-
         // SMEMBERS
         [115, 109, 101, 109, 98, 101, 114, 115, ..] => {
             for member in state.smembers() {
-                println!("{}", member);
+                let _ = stream.write(member.as_bytes());
+                let _ = stream.write(&[10]);
             }
         }
-
         // SREM member
         [115, 114, 101, 109, ..] => {
-            state.srem("BOH");
+            let (_, rhs) = bytes.split_at(5);
+            state.srem(str::from_utf8(&rhs).unwrap());
         }
-
         // SET key value
         [115, 101, 116, ..]  => {
             let (_, rhs) = bytes.split_at(4);
@@ -91,10 +92,20 @@ fn handle_buf_slice(bytes: &[u8], mut stream: &TcpStream, state: &mut State) {
             );
             let _ = stream.write(&[79, 75, 10]); // OK
         }
-
         // DEBUG
         [100, 101, 98, 117, 103, ..] => {
             println!("{:#?}", state);
+        }
+
+        [] => {
+            // Reached end of stream.
+            // Ideally you would use:
+            // https://doc.rust-lang.org/std/io/trait.Write.html#tymethod.flush
+            // fn flush(&mut self) -> Result<()>
+            // Flush this output stream, ensuring that all intermediately
+            // buffered contents reach their destination.
+            // However it looks like this is probably unnecessary, since we're
+            // writing back to the stream immediately for the client to consume.
         }
 
         _ => {

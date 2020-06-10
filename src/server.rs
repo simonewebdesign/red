@@ -28,7 +28,6 @@ fn handle_conn(mut stream: TcpStream, state: &mut State) {
     loop {
         match stream.read_to_end(&mut buf) {
             Ok(_) => {
-                println!("ENTIRE BUFFER = {:#?}", &buf);
                 let iter = buf.split(|c| *c == 10);
 
                 for bytes in iter {

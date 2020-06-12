@@ -18,10 +18,9 @@ pub fn read_eval_print(state: &mut State) {
     let mut input = String::new();
 
     io::stdin().read_line(&mut input)
-        .ok()
         .expect("failed to read line");
 
-    let command_with_args: Vec<&str> = input.split(" ").collect();
+    let command_with_args: Vec<&str> = input.split(' ').collect();
 
     match command_with_args.as_slice() {
         ["get", key] => {

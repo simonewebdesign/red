@@ -51,7 +51,7 @@ impl State {
     /// }
     /// ```
     pub fn get(&mut self, key: &str) -> Option<&String> {
-        return self.store.get(key)
+        self.store.get(key)
     }
 
     /// Add a new member to the set.

@@ -1,8 +1,8 @@
-# Red 🔴
+# 🔴 Red ![Build Status](https://travis-ci.org/simonewebdesign/red.svg?branch=master)
 
 > Fast, reliable key-value storage. Inspired by Redis, built with Rust.
 
-Red has a similar interface to Redis. It has two executables:
+**Red** has a similar interface to Redis. It has two executables:
 
 - `red` - an interactive shell (like `redis-cli`)
 - `red-server` - a TCP server (like `redis-server`)

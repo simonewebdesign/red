@@ -13,6 +13,8 @@ The server, on the other hand, can handle multiple connections and multiple comm
 
 ## Commands
 
+Full documentation can be found [here](https://simonewebdesign.github.io/red/red/struct.State.html). List of supported commands:
+
 * [`GET`](#get-key)
 * [`SADD`](#sadd-member)
 * [`SET`](#set-key-value)

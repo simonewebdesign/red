@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["State","An opaque type that stores data."]]});

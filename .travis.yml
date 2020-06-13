@@ -8,3 +8,9 @@ jobs:
     - rust: nightly
   fast_finish: true
 cache: cargo
+script:
+  - cargo build --verbose --all
+  - cargo test --verbose --all
+  - rustc src/server.rs -o server
+  - ./server &
+  - ./tests/server_test.sh

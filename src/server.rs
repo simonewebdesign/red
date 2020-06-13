@@ -98,13 +98,6 @@ fn handle_buf_slice(bytes: &[u8], mut stream: &TcpStream, state: &mut State) {
 
         [] => {
             // Reached end of stream.
-            // Ideally you would use:
-            // https://doc.rust-lang.org/std/io/trait.Write.html#tymethod.flush
-            // fn flush(&mut self) -> Result<()>
-            // Flush this output stream, ensuring that all intermediately
-            // buffered contents reach their destination.
-            // However it looks like this is probably unnecessary, since we're
-            // writing back to the stream immediately for the client to consume.
         }
 
         _ => {

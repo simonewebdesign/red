@@ -87,7 +87,7 @@ impl State {
     /// For more detail about iterators, see the
     /// [official docs](https://doc.rust-lang.org/std/iter/index.html).
     pub fn smembers(&mut self) -> impl Iterator<Item = &String> {
-        return self.set.iter();
+        self.set.iter()
     }
 
     /// Remove the specified member from the set.

@@ -1,4 +1,4 @@
-# 🔴 Red ![Build Status](https://travis-ci.org/simonewebdesign/red.svg?branch=master)
+# 🔴 Red [![Build Status](https://travis-ci.org/simonewebdesign/red.svg?branch=master)](https://travis-ci.org/simonewebdesign/red)
 
 > Fast, reliable key-value storage. Inspired by Redis, built with Rust.
 

@@ -3,9 +3,31 @@ use std::net::{TcpListener, TcpStream};
 use std::str;
 mod lib;
 use lib::State;
+use std::env;
 
 fn main() {
-    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+    let mut args = env::args().skip(1);
+    let mut host = "127.0.0.1".to_string();
+    let mut port = "7878".to_string();
+
+    loop {
+        match args.next() {
+            Some(x) if x == "--host" => {
+                host = args.next().unwrap_or(host);
+            },
+            Some(x) if x == "--port" => {
+                port = args.next().unwrap_or(port);
+            },
+            Some(x) => {
+                println!("unknown argument: {}", x);
+            }
+            None => {
+                break;
+            }
+        }
+    }
+
+    let listener = TcpListener::bind(format!("{}:{}", host, port)).unwrap();
     listener.set_nonblocking(true).expect("Cannot set non-blocking");
 
     let mut state = State::new();

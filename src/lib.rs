@@ -4,7 +4,7 @@ use std::collections::{HashMap, HashSet};
 ///
 /// This is used by both red and red-server independently, kind of like a
 /// singleton instance; however, you can make as many instances as you need.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct State {
     store: HashMap<String, String>,
     set: HashSet<String>,
@@ -158,6 +158,20 @@ impl State {
         res
     }
 
+    /// Deserializes a previously serialized String into Self.
+    ///
+    /// # Example
+    /// ```
+    /// # let mut state = red::State::new();
+    /// state.sadd("a".to_string());
+    /// state.sadd("b".to_string());
+    ///
+    /// state.set("x".to_string(), "1".to_string());
+    /// state.set("y".to_string(), "2".to_string());
+    ///
+    /// let s = red::State::deserialize(state.serialize());
+    ///
+    /// assert_eq!(state, s);
     pub fn deserialize(string: String) -> Self {
         let mut set = HashSet::new();
         let mut store = HashMap::new();

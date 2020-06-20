@@ -1,4 +1,6 @@
 use std::io;
+use std::io::prelude::*;
+use std::fs::File;
 mod lib;
 use lib::State;
 
@@ -23,6 +25,17 @@ pub fn read_eval_print(state: &mut State) {
     let command_with_args: Vec<&str> = input.split(' ').collect();
 
     match command_with_args.as_slice() {
+        ["save\n"] => {
+            match save(state.serialize()) {
+                Ok(_) => {
+                    println!("Saving completed");
+                }
+                Err(msg) => {
+                    println!("Saving failed: {}", msg);
+                }
+            }
+        }
+
         ["get", key] => {
             match state.get(key.trim()) {
                 Some(value) => println!("{}", value),
@@ -66,4 +79,10 @@ pub fn read_eval_print(state: &mut State) {
             println!("ERR unknown command");
         }
     }
+}
+
+fn save(data: String) -> std::io::Result<()> {
+    let mut store = File::create("store.red")?;
+    store.write_all(data.as_bytes())?;
+    Ok(())
 }

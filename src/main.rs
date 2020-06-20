@@ -54,6 +54,14 @@ pub fn read_eval_print(state: &mut State) {
             println!("{:#?}", state);
         }
 
+        ["ser\n"] => {
+            println!("{}", state.serialize());
+        }
+
+        ["des\n"] => {
+            println!("{:#?}", State::deserialize(state.serialize()));
+        }
+
         _ => {
             println!("ERR unknown command");
         }

@@ -121,4 +121,60 @@ impl State {
     pub fn set(&mut self, key: String, value: String) {
         self.store.insert(key, value);
     }
+
+    /// Serializes Self into a String.
+    ///
+    /// # Example
+    /// ```
+    /// # let mut state = red::State::new();
+    /// state.sadd("a".to_string());
+    /// state.sadd("b".to_string());
+    ///
+    /// state.set("x".to_string(), "1".to_string());
+    /// state.set("y".to_string(), "2".to_string());
+    ///
+    /// let s = state.serialize();
+    ///
+    /// assert!(s.contains("\na"));
+    /// assert!(s.contains("\nb"));
+    /// assert!(s.contains("\t"));
+    /// assert!(s.contains("\nx 1"));
+    /// assert!(s.contains("\ny 2"));
+    pub fn serialize(&mut self) -> String {
+        let mut res = String::new();
+
+        for member in self.set.iter() {
+            res += "\n";
+            res += member;
+        }
+        res += "\t";
+
+        for (key, val) in &self.store {
+            res += "\n";
+            res += key;
+            res += " ";
+            res += val;
+        }
+        res
+    }
+
+    pub fn deserialize(string: String) -> Self {
+        let mut set = HashSet::new();
+        let mut store = HashMap::new();
+        let mut iter = string.split('\t');
+
+        for elem in iter.next().unwrap().split('\n').skip(1) {
+            set.insert(elem.to_string());
+        }
+
+        for kv in iter.next().unwrap().split('\n').skip(1) {
+            let mut pair = kv.split(' ');
+            store.insert(pair.next().unwrap().to_string(), pair.next().unwrap().to_string());
+        }
+
+        State {
+            set,
+            store,
+        }
+    }
 }

@@ -1,11 +1,19 @@
 use std::io;
 use std::io::prelude::*;
+use std::fs;
 use std::fs::File;
+use std::path::Path;
 mod lib;
 use lib::State;
 
 fn main() {
-    let mut state = State::new();
+    let mut state;
+
+    if Path::new("store.red").exists() {
+        state = State::deserialize(restore());
+    } else {
+        state = State::new();
+    }
 
     loop {
         read_eval_print(&mut state);
@@ -83,6 +91,10 @@ pub fn read_eval_print(state: &mut State) {
 
 fn save(data: String) -> std::io::Result<()> {
     let mut store = File::create("store.red")?;
-    store.write_all(data.as_bytes())?;
-    Ok(())
+    store.write_all(data.as_bytes())
+}
+
+fn restore() -> String {
+    fs::read_to_string("store.red")
+        .expect("Failed restoring state")
 }

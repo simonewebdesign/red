@@ -1,26 +1,31 @@
+extern crate signal_hook;
+
 use std::io;
 use std::io::prelude::*;
 use std::fs;
 use std::fs::File;
+use std::io::Error;
 use std::path::Path;
+use std::process;
 mod lib;
 use lib::State;
 
-fn main() {
+fn main() -> Result<(), Error> {
     let mut state;
-
     if Path::new("store.red").exists() {
-        state = State::deserialize(restore());
+        state = State::deserialize(read_from_file());
     } else {
         state = State::new();
     }
+
+    unsafe { signal_hook::register(signal_hook::SIGTERM, move || on_shutdown(&mut state)) }?;
 
     loop {
         read_eval_print(&mut state);
     }
 }
 
-pub fn read_eval_print(state: &mut State) {
+fn read_eval_print(state: &mut State) {
     print!("> ");
     io::Write::flush(&mut io::stdout())
         .expect("flush failed");
@@ -34,7 +39,7 @@ pub fn read_eval_print(state: &mut State) {
 
     match command_with_args.as_slice() {
         ["save\n"] => {
-            match save(state.serialize()) {
+            match write_to_file(state.serialize()) {
                 Ok(_) => {
                     println!("Saving completed");
                 }
@@ -89,12 +94,25 @@ pub fn read_eval_print(state: &mut State) {
     }
 }
 
-fn save(data: String) -> std::io::Result<()> {
-    let mut store = File::create("store.red")?;
-    store.write_all(data.as_bytes())
+fn write_to_file(data: String) -> std::io::Result<()> {
+    let mut f = File::create("store.red")?;
+    f.write_all(data.as_bytes())
 }
 
-fn restore() -> String {
+fn read_from_file() -> String {
     fs::read_to_string("store.red")
         .expect("Failed restoring state")
+}
+
+fn on_shutdown(state: &mut State) {
+    print!("Shutting down... ");
+    match write_to_file(state.serialize()) {
+        Ok(_) => {
+            println!("saving completed");
+        }
+        Err(msg) => {
+            println!("saving failed: {}", msg);
+        }
+    }
+    process::abort();
 }

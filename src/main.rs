@@ -7,13 +7,11 @@ mod lib;
 use lib::State;
 
 fn main() {
-    let mut state;
-
-    if Path::new("store.red").exists() {
-        state = State::deserialize(restore());
+    let mut state = if Path::new("store.red").exists() {
+        State::deserialize(read_file())
     } else {
-        state = State::new();
-    }
+        State::new()
+    };
 
     loop {
         read_eval_print(&mut state);
@@ -94,7 +92,7 @@ fn save(data: String) -> std::io::Result<()> {
     store.write_all(data.as_bytes())
 }
 
-fn restore() -> String {
+fn read_file() -> String {
     fs::read_to_string("store.red")
-        .expect("Failed restoring state")
+        .expect("Failed reading from file")
 }

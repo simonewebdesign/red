@@ -1,6 +1,8 @@
 use std::io::{self, Read, Write};
 use std::net::{TcpListener, TcpStream};
+use std::fs;
 use std::str;
+use std::path::Path;
 mod lib;
 use lib::State;
 use std::env;
@@ -30,7 +32,11 @@ fn main() {
     let listener = TcpListener::bind(format!("{}:{}", host, port)).unwrap();
     listener.set_nonblocking(true).expect("Cannot set non-blocking");
 
-    let mut state = State::new();
+    let mut state = if Path::new("store.red").exists() {
+        State::deserialize(read_file())
+    } else {
+        State::new()
+    };
 
     for stream in listener.incoming() {
         match stream {
@@ -126,4 +132,9 @@ fn handle_buf_slice(bytes: &[u8], mut stream: &TcpStream, state: &mut State) {
             println!("unknown operation");
         }
     }
+}
+
+fn read_file() -> String {
+    fs::read_to_string("store.red")
+        .expect("Failed reading from file")
 }

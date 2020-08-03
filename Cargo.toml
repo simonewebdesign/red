@@ -4,4 +4,4 @@ version = "0.1.0"
 authors = ["Simone Vittori <hello@simonewebdesign.it>"]
 
 [dependencies]
-signal-hook = "0.1.15"
+signal-hook = "0.1.16"

@@ -1,95 +1,172 @@
-use std::io;
-use std::io::prelude::*;
+extern crate signal_hook;
+
+use std::io::{self, Read, Write, Error};
+use std::net::{TcpListener, TcpStream};
 use std::fs;
-use std::fs::File;
+use std::process;
+use std::str;
 use std::path::Path;
 mod lib;
 use lib::State;
+use std::env;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use signal_hook::flag as signal_flag;
 
-fn main() {
+fn main() -> Result<(), Error> {
+    let mut args = env::args().skip(1);
+    let mut host = "127.0.0.1".to_string();
+    let mut port = "7878".to_string();
+
+    loop {
+        match args.next() {
+            Some(x) if x == "--host" => {
+                host = args.next().unwrap_or(host);
+            },
+            Some(x) if x == "--port" => {
+                port = args.next().unwrap_or(port);
+            },
+            Some(x) => {
+                println!("unknown argument: {}", x);
+            }
+            None => {
+                break;
+            }
+        }
+    }
+
+    let listener = TcpListener::bind(format!("{}:{}", host, port)).unwrap();
+    listener.set_nonblocking(true).expect("Cannot set non-blocking");
+
+    println!("Red server listening on {}:{} (pid={})", host, port, process::id());
+
     let mut state = if Path::new("store.red").exists() {
         State::deserialize(read_file())
     } else {
         State::new()
     };
 
+    let term = Arc::new(AtomicUsize::new(0));
+    const SIGTERM: usize = signal_hook::SIGTERM as usize;
+    const SIGINT: usize = signal_hook::SIGINT as usize;
+    const SIGQUIT: usize = signal_hook::SIGQUIT as usize;
+    signal_flag::register_usize(signal_hook::SIGTERM, Arc::clone(&term), SIGTERM)?;
+    signal_flag::register_usize(signal_hook::SIGINT, Arc::clone(&term), SIGINT)?;
+    signal_flag::register_usize(signal_hook::SIGQUIT, Arc::clone(&term), SIGQUIT)?;
+
     loop {
-        read_eval_print(&mut state);
+        match term.load(Ordering::Relaxed) {
+            0 => {
+                for stream in listener.incoming() {
+                    match stream {
+                        Ok(s) => {
+                            handle_conn(s, &mut state);
+                        }
+                        Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                            continue;
+                        }
+                        Err(e) => panic!("Encountered IO error: {}", e),
+                    }
+                }
+            }
+            SIGTERM => {
+                eprintln!("Terminating on the TERM signal");
+                process::abort();
+            }
+            SIGINT => {
+                eprintln!("Terminating on the INT signal");
+
+            }
+            SIGQUIT => {
+                eprintln!("Terminating on the QUIT signal");
+
+            }
+            _ => unreachable!(),
+        }
     }
 }
 
-pub fn read_eval_print(state: &mut State) {
-    print!("> ");
-    io::Write::flush(&mut io::stdout())
-        .expect("flush failed");
+fn handle_conn(mut stream: TcpStream, state: &mut State) {
+    let mut buf = vec![];
+    loop {
+        match stream.read_to_end(&mut buf) {
+            Ok(_) => {
+                let iter = buf.split(|c| *c == 10);
 
-    let mut input = String::new();
-
-    io::stdin().read_line(&mut input)
-        .expect("failed to read line");
-
-    let command_with_args: Vec<&str> = input.split(' ').collect();
-
-    match command_with_args.as_slice() {
-        ["save\n"] => {
-            match save(state.serialize()) {
-                Ok(_) => {
-                    println!("Saving completed");
+                for bytes in iter {
+                    handle_buf_slice(bytes, &stream, state);
                 }
-                Err(msg) => {
-                    println!("Saving failed: {}", msg);
+
+                break;
+            },
+            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                // TODO: handle idle waiting for fd for linux
+            }
+            Err(e) => panic!("encountered IO error: {}", e),
+        };
+    };
+}
+
+fn handle_buf_slice(bytes: &[u8], mut stream: &TcpStream, state: &mut State) {
+    match bytes {
+        // GET key
+        [103, 101, 116, ..] => {
+            let (_, key) = bytes.split_at(4);
+
+            match state.get(str::from_utf8(&key).unwrap()) {
+                Some(value) => {
+                    let _ = stream.write(value.as_bytes());
+                    let _ = stream.write(&[10]);
+                },
+                None => {
+                    let _ = stream.write(&[110, 105, 108, 10]); // nil
                 }
             }
         }
-
-        ["get", key] => {
-            match state.get(key.trim()) {
-                Some(value) => println!("{}", value),
-                None => println!("(nil)")
-            }
+        // SADD member
+        [115, 97, 100, 100, ..] => {
+            let (_, rhs) = bytes.split_at(5);
+            state.sadd(
+                String::from_utf8(rhs.to_vec()).unwrap(),
+            );
         }
-
-        ["sadd", member] => {
-            state.sadd(member.trim().to_string());
-            println!("OK");
-        }
-
-        ["smembers\n"] => {
+        // SMEMBERS
+        [115, 109, 101, 109, 98, 101, 114, 115, ..] => {
             for member in state.smembers() {
-                println!("{}", member);
+                let _ = stream.write(member.as_bytes());
+                let _ = stream.write(&[10]);
             }
         }
-
-        ["srem", member] => {
-            state.srem(member.trim());
+        // SREM member
+        [115, 114, 101, 109, ..] => {
+            let (_, rhs) = bytes.split_at(5);
+            state.srem(str::from_utf8(&rhs).unwrap());
         }
-
-        ["set", key, val] => {
-            state.set(key.to_string(), val.trim().to_string());
-            println!("OK");
+        // SET key value
+        [115, 101, 116, ..]  => {
+            let (_, rhs) = bytes.split_at(4);
+            let mut iter = rhs.split(|c| *c == 32); // space
+            let key = iter.next().unwrap();
+            let val = iter.next().unwrap();
+            state.set(
+                String::from_utf8(key.to_vec()).unwrap(),
+                String::from_utf8(val.to_vec()).unwrap()
+            );
+            let _ = stream.write(&[79, 75, 10]); // OK
         }
-
-        ["debug\n"] => {
+        // DEBUG
+        [100, 101, 98, 117, 103, ..] => {
             println!("{:#?}", state);
         }
 
-        ["ser\n"] => {
-            println!("{}", state.serialize());
-        }
-
-        ["des\n"] => {
-            println!("{:#?}", State::deserialize(state.serialize()));
+        [] => {
+            // Reached end of stream.
         }
 
         _ => {
-            println!("ERR unknown command");
+            println!("unknown operation");
         }
     }
-}
-
-fn save(data: String) -> std::io::Result<()> {
-    let mut store = File::create("store.red")?;
-    store.write_all(data.as_bytes())
 }
 
 fn read_file() -> String {

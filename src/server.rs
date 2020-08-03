@@ -1,3 +1,5 @@
+extern crate signal_hook;
+
 use std::io::{self, Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::fs;
@@ -6,6 +8,17 @@ use std::path::Path;
 mod lib;
 use lib::State;
 use std::env;
+// use std::io;
+// use std::io::prelude::*;
+// use std::fs;
+// use std::fs::File;
+// use std::io::Error;
+// use std::path::Path;
+// use std::process;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use signal_hook::flag as signal_flag;
+// mod lib;
 
 fn main() {
     let mut args = env::args().skip(1);
@@ -38,15 +51,42 @@ fn main() {
         State::new()
     };
 
-    for stream in listener.incoming() {
-        match stream {
-            Ok(s) => {
-                handle_conn(s, &mut state);
+    let term = Arc::new(AtomicUsize::new(0));
+    const SIGTERM: usize = signal_hook::SIGTERM as usize;
+    const SIGINT: usize = signal_hook::SIGINT as usize;
+    const SIGQUIT: usize = signal_hook::SIGQUIT as usize;
+    signal_flag::register_usize(signal_hook::SIGTERM, Arc::clone(&term), SIGTERM)?;
+    signal_flag::register_usize(signal_hook::SIGINT, Arc::clone(&term), SIGINT)?;
+    signal_flag::register_usize(signal_hook::SIGQUIT, Arc::clone(&term), SIGQUIT)?;
+
+    loop {
+        match term.load(Ordering::Relaxed) {
+            0 => {
+                for stream in listener.incoming() {
+                    match stream {
+                        Ok(s) => {
+                            handle_conn(s, &mut state);
+                        }
+                        Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                            continue;
+                        }
+                        Err(e) => panic!("Encountered IO error: {}", e),
+                    }
+                }
             }
-            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-                continue;
+            SIGTERM => {
+                eprintln!("Terminating on the TERM signal");
+                // break;
             }
-            Err(e) => panic!("Encountered IO error: {}", e),
+            SIGINT => {
+                eprintln!("Terminating on the INT signal");
+                // break;
+            }
+            SIGQUIT => {
+                eprintln!("Terminating on the QUIT signal");
+                // break;
+            }
+            _ => unreachable!(),
         }
     }
 }

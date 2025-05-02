@@ -37,7 +37,7 @@ pub fn read_eval_print(state: &mut State) {
                     println!("Saving completed");
                 }
                 Err(msg) => {
-                    println!("Saving failed: {}", msg);
+                    eprintln!("Saving failed: {}", msg);
                 }
             }
         }
@@ -82,7 +82,7 @@ pub fn read_eval_print(state: &mut State) {
         }
 
         _ => {
-            println!("ERR unknown command");
+            eprintln!("ERR unknown command");
         }
     }
 }

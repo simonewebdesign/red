@@ -9,7 +9,7 @@ use std::env;
 
 fn main() {
     let mut args = env::args().skip(1);
-    let mut host = "127.0.0.1".to_string();
+    let mut host = "0.0.0.0".to_string();
     let mut port = "7878".to_string();
 
     loop {
